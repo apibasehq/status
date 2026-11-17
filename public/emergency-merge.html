@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emergency merge procedure - Apibase</title>
+  <style>
+    body { margin: 0; padding: 24px; background: #f6f7fb; color: #10233f; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 900px; margin: 0 auto; background: #ffffff; border: 1px solid #d7dfeb; border-radius: 12px; padding: 16px 24px; }
+    .meta { color: #4b5b78; font-size: 14px; }
+    pre { overflow-x: auto; padding: 10px; border: 1px solid #d7dfeb; border-radius: 8px; background: #f9fbff; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Emergency merge procedure</h1>
+<p>Use this page when a change can&#39;t wait for Apibase:</p>
+<ul><li>Apibase can&#39;t publish the `Apibase Gate` result at all, for example during a total outage or while the outbound connector to your private Git server is down.</li><li>Apibase can&#39;t analyze changes and your organization holds merges until it&#39;s back (the `strict` policy): the check reads «On hold until Apibase is back».</li></ul>
+<p>If your organization uses the continuity policy, Apibase passes the check without analysis while it can&#39;t analyze changes, and you don&#39;t need this procedure. Every merge made without an Apibase analysis is recorded and analyzed when Apibase is back. It is never shown as an approval.</p>
+<h2>GitHub with an emergency bypass team</h2>
+<p>When merge enforcement was activated, your organization chose a team that the Apibase ruleset lists as a bypass actor in pull-request-only mode. A member of that team can merge one pull request whose `Apibase Gate` check is missing or pending.</p>
+<ol><li>Open the pull request and confirm that the only failing requirement is `Apibase Gate`.</li><li>Select the option to merge without waiting for requirements to be met (bypass rules).</li><li>Write the incident and the reason in the pull request, so reviewers can find it later.</li><li>Merge. GitHub records the bypass, and Apibase detects it and analyzes the change when it&#39;s back.</li></ol>
+<p>The team can bypass the rule at any time, not only during incidents. Keep it small, and review its use in Apibase under ungated merges and bypass events.</p>
+<h2>GitHub without an emergency bypass team</h2>
+<p>Only a repository administrator can proceed.</p>
+<ol><li>Open the repository settings, then Rules, then Rulesets, and select the Apibase ruleset.</li><li>Set its enforcement status to Disabled and save. This lifts the Apibase requirement for every pull request on the protected branches, so keep the window short.</li><li>Merge the pull requests that cannot wait.</li><li>Set the ruleset back to Active. Apibase also repairs drift in its ruleset when it recovers.</li></ol>
+<h2>GitLab</h2>
+<p>External status checks only accept a passed, failed or pending response, so GitLab has no designated emergency actor. There are two exits, both broader than a GitHub bypass team.</p>
+<ul><li>Post a passed response for the exact head of one merge request, as a user allowed to approve it (Developer role or higher). Find the check id with `GET /projects/:id/external_status_checks`.</li><li>A Maintainer or Owner can clear the project setting Status checks must succeed in Settings, Merge requests. This lifts every external status check of the project; restore it afterwards.</li></ul>
+<pre><code>curl --request POST --header &quot;PRIVATE-TOKEN: &lt;token&gt;&quot; \
+  &quot;https://gitlab.example.com/api/v4/projects/&lt;project-id&gt;/merge_requests/&lt;iid&gt;/status_check_responses&quot; \
+  --data &quot;sha=&lt;head-sha&gt;&amp;external_status_check_id=&lt;check-id&gt;&amp;status=passed&quot;</code></pre>
+<p>GitLab rejects a response for a commit that is not the current head of the merge request. If the project requires all threads to be resolved, also resolve the Apibase &quot;API review&quot; thread of the merge request; Apibase resolves it by itself when the change passes once it&#39;s back.</p>
+<h2>After Apibase recovers</h2>
+<p>Apibase redelivers the GitHub webhooks that failed, re-enables GitLab hooks disabled by failed deliveries, checks open pull and merge requests again, and analyzes what merged during the incident. Organization administrators are notified when that analysis is ready.</p>
+    <p class="meta">Updated: 2026-11-17T19:54:45.419Z</p>
+  </main>
+</body>
+</html>
